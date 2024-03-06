@@ -1,10 +1,10 @@
 resource "aws_vpc" "thales-vpc" {
 
-  cidr_block           = "192.168.0.0/16"
-  instance_tenancy     = "default"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-  assign_generated_ipv6_cidr_block=false
+  cidr_block                       = "192.168.0.0/16"
+  instance_tenancy                 = "default"
+  enable_dns_support               = true
+  enable_dns_hostnames             = true
+  assign_generated_ipv6_cidr_block = false
 
 
   tags = {
@@ -22,62 +22,62 @@ resource "aws_internet_gateway" "gw" {
 }
 
 resource "aws_subnet" "public_1" {
-  vpc_id     = aws_vpc.thales-vpc.id
-  cidr_block = "192.168.0.0/18"
-  availability_zone = "eu-west-3a"
-  map_public_ip_on_launch=true
+  vpc_id                  = aws_vpc.thales-vpc.id
+  cidr_block              = "192.168.0.0/18"
+  availability_zone       = "eu-west-3a"
+  map_public_ip_on_launch = true
   tags = {
-    Name = "public-eu-paris-3a"
-    "kubernetes.io/cluster/eks_cluster_role"="shared"
-    "kubernetes.io/role/elb"=1
+    Name                                     = "public-eu-paris-3a"
+    "kubernetes.io/cluster/eks_cluster_role" = "shared"
+    "kubernetes.io/role/elb"                 = 1
   }
 }
 
 resource "aws_subnet" "public_2" {
-  vpc_id     = aws_vpc.thales-vpc.id
-  cidr_block = "192.168.64.0/18"
-  availability_zone = "eu-west-3b"
-  map_public_ip_on_launch=true
+  vpc_id                  = aws_vpc.thales-vpc.id
+  cidr_block              = "192.168.64.0/18"
+  availability_zone       = "eu-west-3b"
+  map_public_ip_on_launch = true
   tags = {
-    Name = "public-eu-paris-3b"
-    "kubernetes.io/cluster/eks_cluster_role"="shared"
-    "kubernetes.io/role/elb"=1
+    Name                                     = "public-eu-paris-3b"
+    "kubernetes.io/cluster/eks_cluster_role" = "shared"
+    "kubernetes.io/role/elb"                 = 1
   }
 }
 
 resource "aws_subnet" "private_1" {
-  vpc_id     = aws_vpc.thales-vpc.id
-  cidr_block = "192.168.128.0/18"
+  vpc_id            = aws_vpc.thales-vpc.id
+  cidr_block        = "192.168.128.0/18"
   availability_zone = "eu-west-3a"
 
   tags = {
-    Name = "public-eu-paris-3a"
-    "kubernetes.io/cluster/eks_cluster_role"="shared"
-    "kubernetes.io/role/elb"=1
+    Name                                     = "public-eu-paris-3a"
+    "kubernetes.io/cluster/eks_cluster_role" = "shared"
+    "kubernetes.io/role/elb"                 = 1
   }
 }
 resource "aws_subnet" "private_2" {
-  vpc_id     = aws_vpc.thales-vpc.id
-  cidr_block = "192.168.192.0/18"
+  vpc_id            = aws_vpc.thales-vpc.id
+  cidr_block        = "192.168.192.0/18"
   availability_zone = "eu-west-3b"
   tags = {
-    Name = "public-eu-paris-3b"
-    "kubernetes.io/cluster/eks_cluster_role`"="shared"
-    "kubernetes.io/role/elb"=1
+    Name                                      = "public-eu-paris-3b"
+    "kubernetes.io/cluster/eks_cluster_role`" = "shared"
+    "kubernetes.io/role/elb"                  = 1
   }
 }
 
 
 resource "aws_eip" "nat1" {
-  depends_on = [ aws_internet_gateway.gw ]
+  depends_on = [aws_internet_gateway.gw]
   # instance = aws_instance.web.id
-  
+
 }
 
 resource "aws_eip" "nat2" {
-  depends_on = [ aws_internet_gateway.gw ]
+  depends_on = [aws_internet_gateway.gw]
   # instance = aws_instance.web.id
-  
+
 }
 resource "aws_nat_gateway" "gw1" {
   allocation_id = aws_eip.nat1.id
@@ -115,7 +115,7 @@ resource "aws_route_table" "private_1" {
   vpc_id = aws_vpc.thales-vpc.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.gw1.id
   }
 
@@ -128,7 +128,7 @@ resource "aws_route_table" "private_2" {
   vpc_id = aws_vpc.thales-vpc.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.gw2.id
   }
 
@@ -161,8 +161,8 @@ resource "aws_route_table_association" "private2" {
 
 # iam role for the eks cluster 
 resource "aws_iam_role" "eks_cluster_role" {
-name = "eks-cluster-role-thales"
-assume_role_policy = <<EOF
+  name               = "eks-cluster-role-thales"
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -199,9 +199,9 @@ resource "aws_eks_cluster" "thales_eks_cluster" {
 
   vpc_config {
 
-    endpoint_private_access=false
+    endpoint_private_access = false
 
-    endpoint_public_access =true
+    endpoint_public_access = true
 
     subnet_ids = [
       aws_subnet.private_1.id,
@@ -215,7 +215,7 @@ resource "aws_eks_cluster" "thales_eks_cluster" {
   # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
   depends_on = [
     aws_iam_role_policy_attachment.role_policy_attach_thales
-    
+
   ]
 }
 
@@ -228,8 +228,8 @@ resource "aws_eks_cluster" "thales_eks_cluster" {
 
 # iam role for the eks cluster node groups
 resource "aws_iam_role" "eks_cluster_node_group_role" {
-name = "eks-cluster-role-node-group-thales"
-assume_role_policy = <<EOF
+  name               = "eks-cluster-role-node-group-thales"
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -278,9 +278,9 @@ resource "aws_eks_node_group" "node-group-nodes-thales" {
     aws_subnet.private_2.id,
   ]
 
-  capacity_type  = "ON_DEMAND"
-  disk_size = 15
-  
+  capacity_type = "ON_DEMAND"
+  disk_size     = 15
+
   instance_types = ["t2.small"]
 
   scaling_config {
